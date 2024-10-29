@@ -13,7 +13,25 @@ const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
-const getTodos = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/user', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield prisma.user.create({
+            data: {
+                username: req.body.username
+            }
+        });
+        return res.status(200).json({
+            message: 'User successfully created!'
+        });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: 'Something went wrong!'
+        });
+    }
+}));
+router.get('/todos', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = parseInt(req.query.userId);
     try {
         const todos = yield prisma.todo.findMany({
@@ -36,5 +54,29 @@ const getTodos = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             message: 'Something went wrong!'
         });
     }
-});
-router.get('/todos', getTodos);
+}));
+router.post('/todo', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield prisma.todo.create({
+            data: {
+                title: req.body.title,
+                description: req.body.description,
+                user: {
+                    connect: {
+                        id: parseInt(req.body.userId)
+                    }
+                }
+            }
+        });
+        return res.status(200).json({
+            message: 'Todo created sucessfully!'
+        });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            message: 'Something went wrong!'
+        });
+    }
+}));
+exports.default = router;

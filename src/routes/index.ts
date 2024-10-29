@@ -1,14 +1,36 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
-
-interface userDetails{
-    userId:string
-}
 
 const router=Router();
 const prisma=new PrismaClient();
 
-const getTodos:(req:any,res:any,next:any)=>any=async (req:Request<{},{},{},userDetails>,res:Response,next)=>{
+router.post('/user',async (req:Request,res:Response,next:NextFunction):Promise<any>=>{
+    try{
+        console.log(req.body);
+
+        await prisma.user.create({
+            data:{
+                username:req.body.username
+            }
+        });
+
+        return res.status(200).json({
+            message:'User successfully created!'
+        });
+    } catch(err){
+        console.log(err);
+        
+        return res.status(500).json({
+            message:'Something went wrong!'
+        });
+    }
+});
+
+interface getTodoDetails{
+    userId:string
+}
+
+router.get('/todos',async (req:Request<{},{},{},getTodoDetails>,res:Response,next:NextFunction):Promise<any>=>{
     const userId=parseInt(req.query.userId);
     try{
         const todos=await prisma.todo.findMany({
@@ -32,8 +54,32 @@ const getTodos:(req:any,res:any,next:any)=>any=async (req:Request<{},{},{},userD
             message:'Something went wrong!'
         });
     }
-}
+});
 
-router.get('/todos',getTodos);
+router.post('/todo',async (req:Request,res:Response,next:NextFunction):Promise<any>=>{
+    try{
+        await prisma.todo.create({
+            data:{
+                title:req.body.title,
+                description:req.body.description,
+                user:{
+                    connect:{
+                        id:parseInt(req.body.userId)
+                    }
+                }
+            }
+        });
+
+        return res.status(200).json({
+            message:'Todo created sucessfully!'
+        });
+    } catch(err){
+        console.log(err);
+
+        return res.status(500).json({
+            message:'Something went wrong!'
+        });
+    }
+});
 
 export default router;
